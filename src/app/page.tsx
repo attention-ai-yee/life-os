@@ -65,25 +65,42 @@ export default async function Home() {
   const achievedGoals = g.filter((goal: any) => goal.current >= goal.target).length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 font-sans">
-
+    <div className="min-h-screen p-4 md:p-6 lg:p-8 font-sans">
       {/* 顶部日期栏 */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">
-            {now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
-            <span className="text-slate-400 font-normal text-base ml-2">{now.toLocaleDateString('zh-CN', { weekday: 'long' })}</span>
-          </h2>
+      <header className="mb-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                {now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">
+                {now.toLocaleDateString('zh-CN', { weekday: 'long' })} · {now.getFullYear()}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 md:gap-6 text-sm">
+            <div className="glass px-4 py-2 rounded-lg flex items-center gap-2">
+              <span className="text-slate-400">📋</span>
+              <span className="text-white font-medium">{completedCount}/{t.length}</span>
+              <span className="text-slate-400 text-xs">待办</span>
+            </div>
+            <div className="glass px-4 py-2 rounded-lg flex items-center gap-2">
+              <span className="text-slate-400">💰</span>
+              <span className="text-emerald-400 font-medium">¥{monthTotal.toFixed(0)}</span>
+              <span className="text-slate-400 text-xs">本月</span>
+            </div>
+            <div className="glass px-4 py-2 rounded-lg flex items-center gap-2">
+              <span className="text-slate-400">🎯</span>
+              <span className="text-white font-medium">{achievedGoals}/{g.length}</span>
+              <span className="text-slate-400 text-xs">目标</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-xs text-slate-400">
-          <span>📋 {completedCount}/{t.length} 待办</span>
-          <span>💰 本月 ¥{monthTotal.toFixed(0)}</span>
-          <span>🎯 {achievedGoals}/{g.length} 目标</span>
-        </div>
-      </div>
+      </header>
 
       {/* 主网格 3列 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <main className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
 
         {/* 🕐 时钟 */}
         <Clock />
@@ -107,7 +124,7 @@ export default async function Home() {
         <Habits initialHabits={h} initialLogs={hl} />
 
         {/* 💰 支出 */}
-        <Expenses initialExpenses={e} weeklyData={weeklyData} maxWeekly={maxWeekly} />
+        <Expenses initialExpenses={e} />
 
         {/* ⚡ 书签 */}
         <Bookmarks initialBookmarks={b} />
@@ -118,39 +135,66 @@ export default async function Home() {
         {/* 🎨 主题 */}
         <ThemeToggle />
 
-      </div>
+      </main>
 
       {/* 底部统计 + 语录 */}
-      <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl bg-slate-800/40 border border-slate-700/50 p-4">
-          <h3 className="text-slate-300 text-xs font-medium mb-2">📊 本月支出分类</h3>
+      <footer className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="glass rounded-xl p-5 card-hover">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white text-sm font-semibold flex items-center gap-2">
+              <span role="img" aria-label="chart">📊</span>
+              本月支出分类
+            </h3>
+            <span className="text-emerald-400 text-xs font-medium">¥{monthTotal.toFixed(0)}</span>
+          </div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(catMap).slice(0, 8).map(([cat, amt]) => (
-              <span key={cat} className="bg-slate-700/60 text-slate-300 px-2 py-1 rounded text-xs">
-                {cat} <span className="text-rose-400 font-medium">¥{amt.toFixed(0)}</span>
+              <span
+                key={cat}
+                className="bg-slate-800/80 text-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-slate-700 cursor-default"
+              >
+                {cat}
+                <span className="text-emerald-400 ml-1">¥{amt.toFixed(0)}</span>
               </span>
             ))}
-            {Object.keys(catMap).length === 0 && <span className="text-slate-500 text-xs italic">暂无数据</span>}
+            {Object.keys(catMap).length === 0 && (
+              <span className="text-slate-500 text-sm italic">暂无数据</span>
+            )}
           </div>
         </div>
         <Quote />
-      </div>
+      </footer>
 
       {/* 近5周趋势 */}
       {weeklyData.length > 0 && (
-        <div className="mt-4 rounded-xl bg-slate-800/40 border border-slate-700/50 p-4">
-          <h3 className="text-slate-300 text-xs font-medium mb-3">📈 近5周支出趋势</h3>
-          <div className="flex items-end gap-2 h-14">
+        <section className="mt-5 glass rounded-xl p-5 card-hover">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-white text-sm font-semibold flex items-center gap-2">
+              <span role="img" aria-label="trend">📈</span>
+              近5周支出趋势
+            </h3>
+            <span className="text-rose-400 text-xs font-medium">
+              总计 ¥{weeklyData.reduce((sum, w) => sum + w.total, 0).toFixed(0)}
+            </span>
+          </div>
+          <div className="flex items-end gap-3 md:gap-4 h-20 md:h-24">
             {weeklyData.map((w, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-rose-400 text-[10px] font-medium">¥{w.total.toFixed(0)}</span>
-                <div className="w-full bg-gradient-to-t from-rose-500/60 to-rose-400/40 rounded-t-sm transition-all hover:from-rose-400/80 hover:to-rose-300/60"
-                  style={{ height: `${Math.max((w.total / maxWeekly) * 40, w.total > 0 ? 4 : 0)}px` }} />
-                <span className="text-slate-500 text-[10px]">{w.label}</span>
+              <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                <span className="text-emerald-400 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                  ¥{w.total.toFixed(0)}
+                </span>
+                <div
+                  className="w-full rounded-t-md transition-all duration-300 group-hover:shadow-lg"
+                  style={{
+                    height: `${Math.max((w.total / maxWeekly) * 60, w.total > 0 ? 8 : 0)}px`,
+                    background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+                  }}
+                />
+                <span className="text-slate-400 text-xs font-medium">{w.label}</span>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   )

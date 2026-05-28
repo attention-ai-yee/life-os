@@ -9,19 +9,16 @@ const PRESETS = [
   { label: '45min', minutes: 45 },
 ]
 
-const SOUND_URL = 'https://www.soundjay.com/buttons/beep-01a.mp3'
-
 export default function FocusTimer() {
   const [mode, setMode] = useState<'idle' | 'focus' | 'break'>('idle')
   const [preset, setPreset] = useState(25)
   const [remaining, setRemaining] = useState(25 * 60)
   const [sessions, setSessions] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const playBeep = useCallback(() => {
     try {
-      const a = new Audio(SOUND_URL)
+      const a = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3')
       a.volume = 0.5
       a.play().catch(() => {})
     } catch {}
@@ -54,51 +51,80 @@ export default function FocusTimer() {
     }, 1000)
   }, [stopTimer, playBeep])
 
-  const cancel = () => { stopTimer(); setMode('idle'); setRemaining(preset * 60) }
+  const cancel = () => {
+    stopTimer()
+    setMode('idle')
+    setRemaining(preset * 60)
+  }
 
   useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current) }, [])
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0')
   const ss = String(remaining % 60).padStart(2, '0')
-  const progress = mode === 'idle' ? 0 : (1 - remaining / (mode === 'focus' ? (sessions > 0 && !intervalRef.current ? preset : 25) * 60 : 5 * 60)) * 100
+  const progress = mode === 'idle' ? 0 : (1 - remaining / (preset * 60)) * 100
 
   return (
-    <div className="rounded-xl bg-slate-800/60 border border-slate-700 p-5 hover:border-slate-500 transition-colors">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-white font-semibold">⏱️ 专注计时</h2>
-        <span className="text-xs text-slate-400">已专注 {sessions} 次</span>
+    <div className="glass rounded-xl p-6 card-hover animate-fade-in" style={{ animationDelay: '700ms' }}>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-white font-semibold flex items-center gap-2">
+          <span role="img" aria-label="timer">⏱️</span>
+          专注计时
+        </h2>
+        <div className="px-3 py-1.5 rounded-lg bg-slate-800/80">
+          <span className="text-slate-400 text-xs">已专注 </span>
+          <span className="text-emerald-400 text-sm font-semibold">{sessions}</span>
+          <span className="text-slate-400 text-xs"> 次</span>
+        </div>
       </div>
 
       {/* 显示 */}
-      <div className="flex flex-col items-center py-2">
+      <div className="flex flex-col items-center py-6">
         {mode !== 'idle' && (
-          <span className={`text-xs px-2 py-0.5 rounded mb-2 ${mode === 'focus' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+          <div
+            className={`px-3 py-1.5 rounded-full text-xs font-medium mb-3 ${
+              mode === 'focus'
+                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            }`}
+          >
             {mode === 'focus' ? '🔴 专注中' : '🟢 休息中'}
-          </span>
+          </div>
         )}
-        <span className="text-5xl font-mono font-bold text-white tracking-widest">{mm}:{ss}</span>
+        <div className="relative">
+          <span className="text-6xl font-mono font-bold text-white tracking-widest">
+            {mm}:{ss}
+          </span>
+          {mode !== 'idle' && (
+            <div
+              className="absolute -bottom-2 left-0 w-full h-1 bg-slate-700 rounded-full overflow-hidden"
+            >
+              <div
+                className={`h-full rounded-full transition-all ${
+                  mode === 'focus'
+                    ? 'bg-gradient-to-r from-rose-500 to-rose-400'
+                    : 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                }`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 进度条 */}
-      {mode !== 'idle' && (
-        <div className="h-1.5 bg-slate-700 rounded-full mt-3 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-1000 ${mode === 'focus' ? 'bg-rose-400' : 'bg-emerald-400'}`}
-            style={{ width: `${progress}%`, transition: 'width 1s linear' }}
-          />
-        </div>
-      )}
-
       {/* 控制按钮 */}
-      <div className="mt-4 space-y-2">
+      <div className="space-y-3">
         {mode === 'idle' ? (
           <>
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               {PRESETS.map(p => (
                 <button
                   key={p.label}
                   onClick={() => { setPreset(p.minutes); setRemaining(p.minutes * 60) }}
-                  className={`flex-1 text-xs py-1.5 rounded-lg transition-colors ${preset === p.minutes ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                  className={`flex-1 py-2.5 rounded-lg text-xs font-medium transition-all ${
+                    preset === p.minutes
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
                 >
                   {p.label}
                 </button>
@@ -106,7 +132,7 @@ export default function FocusTimer() {
             </div>
             <button
               onClick={() => startTimer(preset, 'focus')}
-              className="w-full bg-rose-500 hover:bg-rose-400 text-white text-sm py-2 rounded-lg transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium py-3 rounded-lg transition-all btn-transition"
             >
               开始专注 🔴
             </button>
@@ -114,7 +140,7 @@ export default function FocusTimer() {
         ) : (
           <button
             onClick={cancel}
-            className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm py-2 rounded-lg transition-colors"
+            className="w-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-sm font-medium py-3 rounded-lg transition-colors"
           >
             停止
           </button>

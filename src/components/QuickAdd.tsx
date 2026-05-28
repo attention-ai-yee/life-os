@@ -1,26 +1,22 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { addTodo } from '@/lib/actions'
-import { addExpense } from '@/lib/actions'
+import { addTodo, addExpense } from '@/lib/actions'
 
 type Tab = 'todo' | 'expense'
+
+const CATEGORIES = ['餐饮', '交通', '购物', '娱乐', '医疗', '通讯', '住房', '教育', '其他']
 
 export default function QuickAdd() {
   const [tab, setTab] = useState<Tab>('todo')
   const [isPending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
 
-  // Todo
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState('medium')
-
-  // Expense
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('餐饮')
   const [note, setNote] = useState('')
-
-  const CATEGORIES = ['餐饮', '交通', '购物', '娱乐', '医疗', '通讯', '住房', '教育', '其他']
 
   function handleAddTodo(e: React.FormEvent) {
     e.preventDefault()
@@ -46,19 +42,28 @@ export default function QuickAdd() {
   }
 
   return (
-    <div className="rounded-xl bg-slate-800/60 border border-slate-700 p-5 hover:border-slate-500 transition-colors">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-white font-semibold">⚡ 快速添加</h2>
-        {done && <span className="text-xs text-emerald-400 animate-pulse">✓ 已添加</span>}
+    <div className="glass rounded-xl p-6 card-hover animate-fade-in" style={{ animationDelay: '600ms' }}>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-white font-semibold flex items-center gap-2">
+          <span role="img" aria-label="quick add">⚡</span>
+          快速添加
+        </h2>
+        {done && (
+          <span className="text-emerald-400 text-sm font-medium animate-pulse">✓ 已添加</span>
+        )}
       </div>
 
       {/* Tab 切换 */}
-      <div className="flex gap-1 mb-3">
+      <div className="flex gap-2 mb-4">
         {(['todo', 'expense'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${tab === t ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              tab === t
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
           >
             {t === 'todo' ? '📋 待办' : '💰 支出'}
           </button>
@@ -67,30 +72,38 @@ export default function QuickAdd() {
 
       {/* 待办表单 */}
       {tab === 'todo' && (
-        <form onSubmit={handleAddTodo} className="space-y-2">
+        <form onSubmit={handleAddTodo} className="space-y-3">
           <input
             autoFocus
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="今天要做什么？"
-            className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full bg-slate-800/60 border border-slate-600 rounded-lg px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
           <div className="flex gap-2">
-            {[['low', '🟢'], ['medium', '🟡'], ['high', '🔴']].map(([p, label]) => (
+            {[
+              { value: 'low', emoji: '🟢', label: '低' },
+              { value: 'medium', emoji: '🟡', label: '中' },
+              { value: 'high', emoji: '🔴', label: '高' },
+            ].map(p => (
               <button
-                key={p}
+                key={p.value}
                 type="button"
-                onClick={() => setPriority(p)}
-                className={`flex-1 py-1.5 rounded-lg text-xs transition-colors ${priority === p ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                onClick={() => setPriority(p.value)}
+                className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                  priority === p.value
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
               >
-                {label} {p === 'low' ? '低' : p === 'medium' ? '中' : '高'}
+                {p.emoji} {p.label}
               </button>
             ))}
           </div>
           <button
             type="submit"
             disabled={isPending || !title.trim()}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs py-2 rounded-lg transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-lg transition-all btn-transition"
           >
             {isPending ? '添加中...' : '添加'}
           </button>
@@ -99,7 +112,7 @@ export default function QuickAdd() {
 
       {/* 支出表单 */}
       {tab === 'expense' && (
-        <form onSubmit={handleAddExpense} className="space-y-2">
+        <form onSubmit={handleAddExpense} className="space-y-3">
           <input
             autoFocus
             type="number"
@@ -108,12 +121,12 @@ export default function QuickAdd() {
             value={amount}
             onChange={e => setAmount(e.target.value)}
             placeholder="金额"
-            className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full bg-slate-800/60 border border-slate-600 rounded-lg px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
           <select
             value={category}
             onChange={e => setCategory(e.target.value)}
-            className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full bg-slate-800/60 border border-slate-600 rounded-lg px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500 transition-colors"
           >
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -121,12 +134,12 @@ export default function QuickAdd() {
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="备注（可选）"
-            className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full bg-slate-800/60 border border-slate-600 rounded-lg px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
           <button
             type="submit"
             disabled={isPending || !amount}
-            className="w-full bg-rose-500 hover:bg-rose-400 disabled:opacity-40 text-white text-xs py-2 rounded-lg transition-colors"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-lg transition-all btn-transition"
           >
             {isPending ? '记录中...' : '记一笔'}
           </button>

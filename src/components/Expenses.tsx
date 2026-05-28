@@ -8,20 +8,18 @@ interface Expense {
 }
 
 const CATEGORIES = [
-  { label: '🍜 餐饮', value: '餐饮' },
-  { label: '🚌 交通', value: '交通' },
-  { label: '🛒 购物', value: '购物' },
-  { label: '🎮 娱乐', value: '娱乐' },
-  { label: '💊 医疗', value: '医疗' },
-  { label: '📱 通讯', value: '通讯' },
-  { label: '🏠 住房', value: '住房' },
-  { label: '📚 教育', value: '教育' },
-  { label: '☕ 其他', value: '其他' },
+  { label: '餐饮', value: '餐饮', emoji: '🍜' },
+  { label: '交通', value: '交通', emoji: '🚌' },
+  { label: '购物', value: '购物', emoji: '🛒' },
+  { label: '娱乐', value: '娱乐', emoji: '🎮' },
+  { label: '医疗', value: '医疗', emoji: '💊' },
+  { label: '通讯', value: '通讯', emoji: '📱' },
+  { label: '住房', value: '住房', emoji: '🏠' },
+  { label: '教育', value: '教育', emoji: '📚' },
+  { label: '其他', value: '其他', emoji: '☕' },
 ]
 
-interface WeeklyData { label: string; total: number }
-
-export default function Expenses({ initialExpenses, weeklyData, maxWeekly }: { initialExpenses: Expense[]; weeklyData?: WeeklyData[]; maxWeekly?: number }) {
+export default function Expenses({ initialExpenses }: { initialExpenses: Expense[] }) {
   const [expenses, setExpenses] = useState(initialExpenses)
   const [isPending, startTransition] = useTransition()
   const [showAdd, setShowAdd] = useState(false)
@@ -65,46 +63,66 @@ export default function Expenses({ initialExpenses, weeklyData, maxWeekly }: { i
   }
 
   return (
-    <div className="rounded-xl bg-slate-800/60 border border-slate-700 p-5 hover:border-slate-500 transition-colors">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-white font-semibold">💰 {monthName}支出</h2>
-        <span className="text-xs text-rose-400">¥{total.toFixed(2)}</span>
+    <div className="glass rounded-xl p-6 card-hover animate-fade-in" style={{ animationDelay: '500ms' }}>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-white font-semibold flex items-center gap-2">
+          <span role="img" aria-label="expenses">💰</span>
+          {monthName}支出
+        </h2>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/20 border border-rose-500/30">
+          <span className="text-rose-400 font-semibold text-sm">¥{total.toFixed(2)}</span>
+        </div>
       </div>
 
       {/* 柱状图 */}
-      <div className="h-20 flex items-end justify-around gap-1">
+      <div className="h-24 flex items-end justify-around gap-1 mb-5">
         {byDay.map((d, i) => (
-          <div key={i} className="flex flex-col items-center gap-1 flex-1">
-            {d.amount > 0 && <span className="text-[9px] text-rose-400/70">¥{d.amount.toFixed(0)}</span>}
+          <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
+            {d.amount > 0 && (
+              <span className="text-emerald-400 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                ¥{d.amount.toFixed(0)}
+              </span>
+            )}
             <div
-              className="w-full bg-gradient-to-t from-rose-500/70 to-rose-400/50 rounded-t-sm transition-all hover:from-rose-400/80 hover:to-rose-300/60"
-              style={{ height: `${Math.max((d.amount / maxAmt) * 64, d.amount > 0 ? 6 : 0)}px` }}
+              className="w-full rounded-t-md transition-all duration-300 group-hover:shadow-lg"
+              style={{
+                height: `${Math.max((d.amount / maxAmt) * 72, d.amount > 0 ? 8 : 0)}px`,
+                background: d.amount > 0
+                  ? 'linear-gradient(180deg, #10b981 0%, #059669 100%)'
+                  : 'rgba(30, 41, 59, 0.3)',
+              }}
               title={`${d.label}: ¥${d.amount.toFixed(2)}`}
             />
-            <span className="text-slate-500 text-[10px]">{d.label}</span>
+            <span className="text-slate-500 text-xs font-medium">{d.label}</span>
           </div>
         ))}
       </div>
 
       {/* 本月分类 */}
       {monthExpenses.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-2">
           {Object.entries(
-            monthExpenses.reduce((acc, e) => { acc[e.category] = (acc[e.category] ?? 0) + Number(e.amount); return acc }, {} as Record<string, number>)
+            monthExpenses.reduce((acc, e) => {
+              acc[e.category] = (acc[e.category] ?? 0) + Number(e.amount)
+              return acc
+            }, {} as Record<string, number>)
           ).map(([cat, amt]) => {
-            const catLabel = CATEGORIES.find(c => c.value === cat)?.label ?? cat
+            const catInfo = CATEGORIES.find(c => c.value === cat)
             return (
-              <span key={cat} className="text-[10px] bg-slate-700/60 text-slate-300 px-1.5 py-0.5 rounded">
-                {catLabel} ¥{amt.toFixed(0)}
+              <span
+                key={cat}
+                className="text-xs bg-slate-800/60 text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700/50 font-medium transition-all hover:bg-slate-700/50"
+              >
+                {catInfo?.emoji} {cat} <span className="text-emerald-400 ml-1">¥{amt.toFixed(0)}</span>
               </span>
             )
           })}
         </div>
       )}
 
-      {/* 添加 */}
+      {/* 添加表单 */}
       {showAdd ? (
-        <form onSubmit={handleAdd} className="mt-3 space-y-2">
+        <form onSubmit={handleAdd} className="mt-5 space-y-3 pt-4 border-t border-slate-700/30">
           <div className="flex gap-2">
             <input
               autoFocus
@@ -114,31 +132,46 @@ export default function Expenses({ initialExpenses, weeklyData, maxWeekly }: { i
               value={amount}
               onChange={e => setAmount(e.target.value)}
               placeholder="金额"
-              className="w-28 bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-slate-400"
+              className="flex-1 bg-slate-800/60 border border-slate-600 rounded-lg px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
             />
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="flex-1 bg-slate-900/60 border border-slate-600 rounded-lg px-2 py-2 text-sm text-slate-300 focus:outline-none"
+              className="w-32 bg-slate-800/60 border border-slate-600 rounded-lg px-3 py-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500 transition-colors"
             >
-              {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              {CATEGORIES.map(c => (
+                <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
+              ))}
             </select>
           </div>
           <input
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="备注（可选）"
-            className="w-full bg-slate-900/60 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-slate-400"
+            className="w-full bg-slate-800/60 border border-slate-600 rounded-lg px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
           <div className="flex gap-2">
-            <button type="submit" disabled={isPending} className="flex-1 bg-rose-500 hover:bg-rose-400 disabled:opacity-50 text-white text-xs py-1.5 rounded-lg transition-colors">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-lg transition-all btn-transition"
+            >
               {isPending ? '记录中...' : '记录支出'}
             </button>
-            <button type="button" onClick={() => setShowAdd(false)} className="text-slate-500 hover:text-slate-300 text-xs px-2">取消</button>
+            <button
+              type="button"
+              onClick={() => setShowAdd(false)}
+              className="px-4 py-2.5 text-slate-400 hover:text-white transition-colors"
+            >
+              取消
+            </button>
           </div>
         </form>
       ) : (
-        <button onClick={() => setShowAdd(true)} className="mt-4 w-full rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm py-2 transition-colors">
+        <button
+          onClick={() => setShowAdd(true)}
+          className="mt-5 w-full rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-sm py-3 font-medium transition-all duration-200 border border-slate-700 hover:border-slate-600"
+        >
           + 记一笔
         </button>
       )}
